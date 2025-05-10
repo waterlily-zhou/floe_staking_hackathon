@@ -44,21 +44,26 @@ async function startSchedulerProcess(walletAddress?: string): Promise<boolean> {
       // Ignore errors here, it's just cleanup
     }
 
-    // Prepare arguments
-    const args = ['ts-node', 'agent/autoClaimScheduler.ts', '--run-now'];
+    // Use the compiled JavaScript file but override module type to CommonJS
+    const args = [
+      'agent/compiled/agent/autoClaimScheduler.js'
+    ];
     
+    // Add additional arguments
     if (walletAddress) {
       args.push(`--address=${walletAddress}`);
     }
     
+    args.push('--run-now');
+    
     // Log the command
-    const cmdString = `npx ${args.join(' ')}`;
+    const cmdString = `node ${args.join(' ')}`;
     logToScheduler(`Starting scheduler with command: ${cmdString}`);
     
-    // Spawn as detached process so it continues running after we return
-    const schedulerProcess = spawn('npx', args, {
+    // Spawn as detached process using node directly
+    const schedulerProcess = spawn('node', args, {
       detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'], // Capture stdout and stderr
+      stdio: ['ignore', 'pipe', 'pipe'], 
       cwd: process.cwd(),
       env: { ...process.env, NODE_ENV: 'production' }
     });
@@ -154,18 +159,41 @@ function isSchedulerRunning(): boolean {
   }
 }
 
-// Stop the scheduler
-function stopScheduler(): boolean {
+// Improved stopScheduler function
+async function stopScheduler(): Promise<boolean> {
   try {
     logToScheduler('Stopping scheduler via API');
     
-    // Try to kill the process
+    // Try to kill the process with proper waiting and error handling
     try {
+      // Execute the pkill command and wait for it to complete
       const killProcess = spawn('pkill', ['-f', 'autoClaimScheduler']);
+      
+      // Wait for the process to complete
+      await new Promise<void>((resolve, reject) => {
+        killProcess.on('close', (code) => {
+          if (code !== 0 && code !== 1) {
+            // code 1 is acceptable - it means no processes were found to kill
+            logToScheduler(`pkill exited with code ${code}`);
+          }
+          resolve();
+        });
+        
+        killProcess.on('error', (err) => {
+          logToScheduler(`Error executing pkill: ${err.message}`);
+          resolve(); // Continue anyway
+        });
+      });
+      
+      // Give a short delay to ensure processes are terminated
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
     } catch (error) {
       logToScheduler(`Error trying to kill scheduler process: ${error instanceof Error ? error.message : String(error)}`);
+      // Continue execution to update the status file
     }
     
+    // Update status file
     if (fs.existsSync(SCHEDULER_STATUS_FILE)) {
       const status = JSON.parse(fs.readFileSync(SCHEDULER_STATUS_FILE, 'utf8'));
       status.isRunning = false;
@@ -177,8 +205,24 @@ function stopScheduler(): boolean {
       logToScheduler('Updated scheduler status file to stopped');
       
       return true;
+    } else {
+      // Create a new status file if one doesn't exist
+      const defaultStatus = {
+        isRunning: false,
+        startedAt: new Date().toISOString(),
+        stoppedAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        reason: 'Stopped via API'
+      };
+      
+      // Ensure directory exists
+      ensureDirectoryExists(SCHEDULER_LOG_DIR);
+      
+      fs.writeFileSync(SCHEDULER_STATUS_FILE, JSON.stringify(defaultStatus, null, 2));
+      logToScheduler('Created new scheduler status file with stopped state');
+      
+      return true;
     }
-    return false;
   } catch (error) {
     logToScheduler(`Error stopping scheduler: ${error instanceof Error ? error.message : String(error)}`);
     return false;
@@ -219,7 +263,7 @@ export async function POST(request: NextRequest) {
     } 
     else if (action === 'stop') {
       // Stop the scheduler
-      const success = stopScheduler();
+      const success = await stopScheduler();
       
       if (success) {
         return NextResponse.json({

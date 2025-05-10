@@ -1,7 +1,6 @@
 {
   "name": "floe_staking_hackathon",
   "version": "1.0.0",
-  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -27,6 +26,7 @@
     "dotenv": "^16.5.0",
     "ethers": "^6.14.0",
     "next": "^15.3.2",
+    "node-cron": "^2.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -40,5 +40,23 @@
     "tailwindcss": "^4.1.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
-  }
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "paths": {
+    "@/*": [
+      "./src/*"
+    ],
+    "@agent/*": [
+      "./agent/*"
+    ]
+  },
+  "plugins": [
+    {
+      "name": "next"
+    }
+  ]
 }

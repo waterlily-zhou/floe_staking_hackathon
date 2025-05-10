@@ -506,15 +506,14 @@ export default function AutoClaimModal({
           console.error('Failed to save settings');
         }
         
-        // Send stop command to scheduler
-        const stopResponse = await fetch('/api/run-command', {
+        // Use the scheduler API to stop the scheduler
+        const stopResponse = await fetch('/api/claim/scheduler', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            command: 'npm',
-            args: ['run', 'auto-claim-scheduler:stop']
+            action: 'stop'
           })
         });
         
