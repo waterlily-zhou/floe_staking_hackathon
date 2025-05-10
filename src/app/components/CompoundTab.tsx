@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import AutoClaimStatus from './AutoClaimStatus'
 import AutoClaimModal from './AutoClaimModal'
+import { ethers } from 'ethers';
 
 // Define types for our data
 interface TokenData {
@@ -234,14 +235,14 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
       // Process claim logs
       const formattedClaimLogs: CompoundLog[] = claimLogs.map((log) => {
         // Format claim logs
-        const formattedGauges = log.claims.map((claim) => ({
+        const formattedGauges = log.claims?.map((claim) => ({
           name: claim.gaugeName || 'Unknown Pool',
           address: claim.gaugeAddress,
-          amount: claim.rewards.reduce((total: number, reward) => 
+          amount: claim.rewards.reduce((total, reward) => 
             total + parseFloat(reward.amount || '0'), 0).toFixed(2),
           token: claim.rewards.map((r) => r.symbol).join('/'),
-          value: claim.rewards.reduce((total: number, reward) => total + reward.valueUSD, 0)
-        }));
+          value: claim.rewards.reduce((total, reward) => total + (reward.valueUSD || 0), 0)
+        })) || [];
         
         return {
           timestamp: log.timestamp,
@@ -249,32 +250,24 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
           isMockMode: log.isMockMode,
           gauges: formattedGauges,
           totalValue: log.summary?.totalClaimed || 0,
-          details: `Claimed rewards from ${log.claims.length} gauges`
+          details: `Claimed rewards from ${formattedGauges.length} gauges`
         };
       });
       
       // Process restake logs
       const formattedRestakeLogs: CompoundLog[] = restakeLogs.map((log) => {
         // Extract stake actions
-        const stakeActions = log.actions.filter((action): action is StakeAction => 
+        const stakeActions = log.actions?.filter((action): action is StakeAction => 
           action.type === 'stake'
-        );
-        
-        // Get gauge names from strategy
-        const gaugeNameMap: Record<string, string> = {};
-        if (log.strategy && log.strategy.recommendedPools) {
-          log.strategy.recommendedPools.forEach((pool) => {
-            gaugeNameMap[pool.gaugeAddress.toLowerCase()] = pool.poolName;
-          });
-        }
+        ) || [];
         
         // Format stake actions as gauges
         const formattedGauges = stakeActions.map((action) => ({
-          name: gaugeNameMap[action.gaugeAddress.toLowerCase()] || 'Unknown Pool',
+          name: action.gaugeName || 'Unknown Pool',
           address: action.gaugeAddress,
-          amount: action.amount,  // Instead of using ethers.formatUnits, get the pre-formatted value
+          amount: ethers.formatEther(action.amount), // Format the BigInt amount
           token: 'BPT', // Balancer Pool Tokens
-          value: parseFloat(action.amount) // Approximate value based on amount
+          value: parseFloat(ethers.formatEther(action.amount)) * 1000 // Approximate value based on amount
         }));
         
         return {
@@ -283,7 +276,7 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
           isMockMode: log.isMockMode,
           gauges: formattedGauges,
           totalValue: log.summary?.totalRestaked || 0,
-          details: `Restaked to ${stakeActions.length} gauges according to strategy`
+          details: `Restaked to ${formattedGauges.length} gauges according to strategy`
         };
       });
       

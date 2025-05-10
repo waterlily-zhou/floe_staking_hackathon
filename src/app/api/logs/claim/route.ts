@@ -5,13 +5,13 @@ import path from 'path';
 export async function GET() {
   try {
     // Path to claim logs directory
-    const logsDir = path.join(process.cwd(), 'data', 'claim_logs');
+    const logsDir = path.join(process.cwd(), 'data', 'auto_claim_logs');
     
     // Read all files in the directory
     const files = await fs.readdir(logsDir);
     
     // Filter for JSON files
-    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    const jsonFiles = files.filter(file => file.startsWith('claim_result_') && file.endsWith('.json'));
     
     // Sort files by name (timestamp) in descending order to get newest first
     jsonFiles.sort().reverse();

@@ -12,7 +12,7 @@ export async function GET() {
     
     // Filter for specific execution log files (excluding bpt_staking files)
     const jsonFiles = files.filter(file => 
-      file.endsWith('.json') && file.startsWith('restake_')
+      file.startsWith('restake_result_') && file.endsWith('.json')
     );
     
     // Sort files by name (timestamp) in descending order to get newest first
