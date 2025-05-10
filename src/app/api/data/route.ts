@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const dataType = url.searchParams.get('type') || 'all';
     
     // Define paths to data files
-    const dataDir = path.resolve(process.cwd(), '..', 'data');
+    const dataDir = path.resolve(process.cwd(), 'data');
     const poolsFilePath = path.join(dataDir, 'pools.json');
     const gaugesFilePath = path.join(dataDir, 'gauges.json');
     

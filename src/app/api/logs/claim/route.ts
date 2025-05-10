@@ -5,7 +5,7 @@ import path from 'path';
 export async function GET() {
   try {
     // Path to claim logs directory
-    const logsDir = path.join(process.cwd(), '..', 'data', 'claim_logs');
+    const logsDir = path.join(process.cwd(), 'data', 'claim_logs');
     
     // Read all files in the directory
     const files = await fs.readdir(logsDir);

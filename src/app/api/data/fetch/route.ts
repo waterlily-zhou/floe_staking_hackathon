@@ -1,44 +1,14 @@
 import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
 import path from 'path';
-
-// Helper function to execute a command and get the output
-async function executeCommand(command: string, args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const childProcess = spawn(command, args, {
-      cwd: path.resolve(process.cwd(), '..'), // Run in parent directory where our main code lives
-    });
-    
-    let stdout = '';
-    let stderr = '';
-    
-    childProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-    
-    childProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-    
-    childProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error(`Command exited with code ${code}`);
-        console.error(stderr);
-        reject(new Error(`Command failed with code ${code}: ${stderr}`));
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-}
+import fetchGaugeData from '@agent/fetchGaugeData';
 
 export async function POST() {
   try {
     console.log('Fetching new gauge and pool data...');
 
     try {
-      // Run the fetchGaugeData.ts script to get latest data
-      await executeCommand('npx', ['ts-node', 'src/agent/fetchGaugeData.ts']);
+      // Directly call the fetchGaugeData function
+      await fetchGaugeData(100); // Pass 100 as the limit parameter
       
       console.log('Data fetch completed successfully');
       

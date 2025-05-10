@@ -56,7 +56,7 @@ interface ClaimLog {
   summary: ClaimLogSummary;
 }
 
-// Define interfaces for the execution logs
+// Define interfaces for the restake logs
 interface RewardAction {
   type: string;
   gauges: {
@@ -77,23 +77,23 @@ interface StrategyPool {
   allocationPercentage: number;
 }
 
-interface ExecutionStrategy {
+interface RestakeStrategy {
   generatedAt: string;
   recommendedPools: StrategyPool[];
 }
 
-interface ExecutionLogSummary {
+interface RestakeLogSummary {
   totalClaimed: number;
   totalRestaked: number;
   errors: string[];
 }
 
-interface ExecutionLog {
+interface RestakeLog {
   timestamp: string;
   isMockMode: boolean;
-  strategy: ExecutionStrategy;
+  strategy: RestakeStrategy;
   actions: (RewardAction | StakeAction)[];
-  summary: ExecutionLogSummary;
+  summary: RestakeLogSummary;
 }
 
 // Update the CompoundLog interface to match the actual log files
@@ -218,18 +218,18 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
   
   const fetchLogs = async () => {
     try {
-      // Fetch both claim and execution logs
-      const [claimLogsResponse, executionLogsResponse] = await Promise.all([
+      // Fetch both claim and restake logs
+      const [claimLogsResponse, restakeLogsResponse] = await Promise.all([
         fetch('/api/logs/claim'),
-        fetch('/api/logs/execution')
+        fetch('/api/logs/restake')
       ]);
       
-      if (!claimLogsResponse.ok || !executionLogsResponse.ok) {
+      if (!claimLogsResponse.ok || !restakeLogsResponse.ok) {
         throw new Error('Failed to fetch logs');
       }
       
       const claimLogs: ClaimLog[] = await claimLogsResponse.json();
-      const executionLogs: ExecutionLog[] = await executionLogsResponse.json();
+      const restakeLogs: RestakeLog[] = await restakeLogsResponse.json();
       
       // Process claim logs
       const formattedClaimLogs: CompoundLog[] = claimLogs.map((log) => {
@@ -253,8 +253,8 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
         };
       });
       
-      // Process execution logs (restake logs)
-      const formattedExecutionLogs: CompoundLog[] = executionLogs.map((log) => {
+      // Process restake logs
+      const formattedRestakeLogs: CompoundLog[] = restakeLogs.map((log) => {
         // Extract stake actions
         const stakeActions = log.actions.filter((action): action is StakeAction => 
           action.type === 'stake'
@@ -288,7 +288,7 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
       });
       
       // Combine and sort logs by timestamp (newest first)
-      const allLogs = [...formattedClaimLogs, ...formattedExecutionLogs]
+      const allLogs = [...formattedClaimLogs, ...formattedRestakeLogs]
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
       setLogs(allLogs);

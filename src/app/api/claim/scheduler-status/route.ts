@@ -3,13 +3,13 @@ import fs from 'fs';
 import path from 'path';
 
 // Status file path (relative to project root, not the ui directory)
-const SCHEDULER_STATUS_FILE = path.resolve(process.cwd(), '..', 'data', 'scheduler_logs', 'scheduler_status.json');
+const SCHEDULER_STATUS_FILE = path.resolve(process.cwd(),  'data', 'scheduler_logs', 'scheduler_status.json');
 
 // Auto claim settings file path
-const AUTO_CLAIM_SETTINGS_FILE = path.resolve(process.cwd(), '..', 'data', 'auto_claim_settings.json');
+const AUTO_CLAIM_SETTINGS_FILE = path.resolve(process.cwd(),  'data', 'auto_claim_settings.json');
 
 // Scheduler log file path
-const SCHEDULER_LOG_FILE = path.resolve(process.cwd(), '..', 'data', 'scheduler_logs', 'scheduler.log');
+const SCHEDULER_LOG_FILE = path.resolve(process.cwd(), 'data', 'scheduler_logs', 'scheduler.log');
 
 // Interface for status response
 interface SchedulerStatus {

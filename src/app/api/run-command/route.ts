@@ -8,7 +8,7 @@ async function executeCommand(command: string, args: string[]): Promise<string> 
     console.log(`Executing command: ${command} ${args.join(' ')}`);
     
     const childProcess = spawn(command, args, {
-      cwd: path.resolve(process.cwd(), '..'), // Run in project root directory
+      cwd: path.resolve(process.cwd()), // Run in project root directory
       stdio: ['ignore', 'pipe', 'pipe'] // Capture stdout and stderr
     });
     

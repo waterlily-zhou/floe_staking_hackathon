@@ -7,7 +7,7 @@ import fs from 'fs';
 async function executeCommand(command: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     const childProcess = spawn(command, args, {
-      cwd: path.resolve(process.cwd(), '..'), // Run in parent directory where our main code lives
+      cwd: path.resolve(process.cwd()),
     });
     
     let stdout = '';
@@ -35,7 +35,7 @@ async function executeCommand(command: string, args: string[]): Promise<string> 
 
 export async function GET() {
   try {
-    const strategyFilePath = path.resolve(process.cwd(), '..', 'data', 'strategy.json');
+    const strategyFilePath = path.resolve(process.cwd(), 'data', 'strategy.json');
     
     // Check if strategy file exists
     if (!fs.existsSync(strategyFilePath)) {
@@ -75,7 +75,7 @@ export async function POST() {
     }
     
     // Read the generated strategy
-    const strategyFilePath = path.resolve(process.cwd(), '..', 'data', 'strategy.json');
+    const strategyFilePath = path.resolve(process.cwd(), 'data', 'strategy.json');
     
     // Check if strategy file exists
     if (!fs.existsSync(strategyFilePath)) {

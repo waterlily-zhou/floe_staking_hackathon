@@ -756,22 +756,20 @@ export default function AutoClaimModal({
         }
 
         console.log('Starting scheduler...');
-        // Start the scheduler directly
-        const startResponse = await fetch('/api/run-command', {
+        // Start the scheduler via the dedicated API
+        const startResponse = await fetch('/api/claim/scheduler', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            command: 'npm',
-            args: ['run', 'auto-claim-scheduler:run-now', '--', `--address=${connectedWallet}`]
+            action: 'start',
+            walletAddress: connectedWallet
           })
         });
 
         if (!startResponse.ok) {
           console.error('Failed to start scheduler');
-        } else {
-          console.log('Scheduler started successfully');
         }
       } catch (error) {
         console.error('Error saving settings or starting scheduler:', error);

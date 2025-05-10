@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import StrategyTab from './components/StrategyTab'
-import CompoundTab from './components/CompoundTab'
+import StrategyTab from '@/app/components/StrategyTab'
+import CompoundTab from '@/app/components/CompoundTab'
 
 // Define ethereum on window object for TypeScript
 declare global {

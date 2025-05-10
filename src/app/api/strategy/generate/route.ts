@@ -1,48 +1,18 @@
 import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-
-// Helper function to execute a command and get the output
-async function executeCommand(command: string, args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const childProcess = spawn(command, args, {
-      cwd: path.resolve(process.cwd(), '..'), // Run in parent directory where our main code lives
-    });
-    
-    let stdout = '';
-    let stderr = '';
-    
-    childProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-    
-    childProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-    
-    childProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error(`Command exited with code ${code}`);
-        console.error(stderr);
-        reject(new Error(`Command failed with code ${code}: ${stderr}`));
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-}
+import analyzeAndGenerateStrategy from '@agent/aiAnalysis';
 
 export async function POST() {
   try {
     console.log('Generating new strategy...');
     
     try {
-      // Run the aiAnalysis.ts script directly using ts-node
-      await executeCommand('npx', ['ts-node', 'src/agent/aiAnalysis.ts']);
+      // Run the analysis directly
+      await analyzeAndGenerateStrategy();
       
       // Read the generated strategy file
-      const strategyFilePath = path.resolve(process.cwd(), '..', 'data', 'strategy.json');
+      const strategyFilePath = path.resolve(process.cwd(), 'data', 'strategy.json');
       
       if (!fs.existsSync(strategyFilePath)) {
         console.error('Strategy file not found after generation');

@@ -35,30 +35,11 @@ export default function StrategyTab() {
   
   // Fetch the latest strategy when component mounts
   useEffect(() => {
-    fetchStrategy()
+    const timer = setTimeout(() => {
+      fetchStrategy()
+    }, 2000)
+    return () => clearTimeout(timer)
   }, [])
-  
-  // Fetch pools data on component mount
-  useEffect(() => {
-    const fetchPoolsData = async () => {
-      try {
-        const response = await fetch('/api/data?type=pools');
-        if (!response.ok) {
-          throw new Error('Failed to fetch pools data');
-        }
-        const data = await response.json();
-        if (data.pools && Array.isArray(data.pools)) {
-          setPoolsData(data.pools);
-        }
-      } catch (error) {
-        console.error('Error fetching pools data:', error);
-        // We don't set an error state here to avoid confusing the user,
-        // since this is background data that falls back to estimates
-      }
-    };
-
-    fetchPoolsData();
-  }, []);
   
   const fetchStrategy = async () => {
     setLoading(true)

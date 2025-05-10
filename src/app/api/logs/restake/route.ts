@@ -5,14 +5,14 @@ import path from 'path';
 export async function GET() {
   try {
     // Path to execution logs directory
-    const logsDir = path.join(process.cwd(), '..', 'data', 'execution_logs');
+    const logsDir = path.join(process.cwd(), 'data', 'auto_restake_logs');
     
     // Read all files in the directory
     const files = await fs.readdir(logsDir);
     
     // Filter for specific execution log files (excluding bpt_staking files)
     const jsonFiles = files.filter(file => 
-      file.endsWith('.json') && file.startsWith('execution_')
+      file.endsWith('.json') && file.startsWith('restake_')
     );
     
     // Sort files by name (timestamp) in descending order to get newest first
@@ -28,7 +28,7 @@ export async function GET() {
     
     return NextResponse.json(logs);
   } catch (error) {
-    console.error('Error reading execution logs:', error);
-    return NextResponse.json({ error: 'Failed to fetch execution logs' }, { status: 500 });
+    console.error('Error reading restake logs:', error);
+    return NextResponse.json({ error: 'Failed to fetch restake logs' }, { status: 500 });
   }
 } 

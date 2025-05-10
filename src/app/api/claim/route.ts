@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { executeClaimWithDelegation } from '../../../../src/agent/delegatedClaiming';
+import { executeClaimWithDelegation } from '@agent/delegatedClaiming';
 
 // Helper function to execute a command and get the output
 async function executeClaimCommand(walletAddress: string, useDelegation: boolean = false, delegationContractAddress?: string): Promise<string> {
@@ -17,7 +17,7 @@ async function executeClaimCommand(walletAddress: string, useDelegation: boolean
     }
     
     const childProcess = spawn('npm', args, {
-      cwd: path.resolve(process.cwd(), '..'), // Run in parent directory where our main code lives
+      cwd: path.resolve(process.cwd()), // Run in project root directory
     });
     
     let stdout = '';
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Get current auto claim settings
     let settings = null;
     try {
-      const settingsFilePath = path.resolve(process.cwd(), '..', 'data', 'auto_claim_settings.json');
+      const settingsFilePath = path.resolve(process.cwd(), 'data', 'auto_claim_settings.json');
       if (fs.existsSync(settingsFilePath)) {
         const settingsData = fs.readFileSync(settingsFilePath, 'utf8');
         settings = JSON.parse(settingsData);

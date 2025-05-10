@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 import axios from 'axios';
 
 // Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 // Claude API configuration
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
@@ -12,7 +12,7 @@ const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-3-opus-20240229';
 
 // File paths
-const DATA_DIR = path.resolve(__dirname, '../../data');
+const DATA_DIR = path.resolve(process.cwd(), 'data');
 const GAUGES_FILE = path.join(DATA_DIR, 'gauges.json');
 const POOLS_FILE = path.join(DATA_DIR, 'pools.json');
 const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
