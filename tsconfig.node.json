@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "outDir": "agent/compiled",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@agent/*": ["./agent/*"]
+    }
+  },
+  "include": [
+    "agent/**/*.ts",
+    "src/agent/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+} 

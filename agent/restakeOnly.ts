@@ -183,7 +183,11 @@ function loadStrategy(): Strategy {
  */
 async function getCurrentPositions(isMockMode = false, walletAddress?: string): Promise<Record<string, bigint>> {
   if (isMockMode) {
-    return mockGetCurrentPositions();
+    // Return mock data for testing
+    return {
+      "0x9fdd52efeb601e4bc78b89c6490505b8ac637e9f": ethers.parseEther("10.0"), // GHO/USDT/USDC
+      "0xa6325e799d266632d347e41a471b22fbd5203ccd": ethers.parseEther("5.0"),  // BAL/ETH
+    };
   }
   
   if (!wallet && !walletAddress) throw new Error("Wallet not initialized");

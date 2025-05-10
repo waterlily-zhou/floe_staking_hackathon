@@ -1,19 +1,33 @@
+# Dependencies
+node_modules
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js
+/.next/
+
+.env
+
+# Debug
 /venv310
 /.venv
 /packages
 
+# Development files
 *.pyc
 __pycache__/
 .DS_Store
 Thumbs.db 
-node_modules
-.env
-/node_modules
+npm-debug.log*
 
+# Compiled output
+agent/compiled/
+
+# Data directories
 /data
 
 # Hardhat files
 /cache
 /artifacts
-
-/.next
+/typechain-types

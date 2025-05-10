@@ -608,30 +608,32 @@ async function getAllGauges() {
 
 export async function GET(request: Request) {
   try {
-    // Get wallet address from the query parameter
+    // Get wallet address and refresh parameter from the query
     const url = new URL(request.url);
     const walletAddress = url.searchParams.get('address');
+    const refresh = url.searchParams.get('refresh');
     
     // Use default address if not provided
     const addressToUse = walletAddress || '0x4Aa0B81F700b7053F98eD21e704B25F1A4A52e69';
     
-    console.log(`Fetching position for address: ${addressToUse}`);
+    console.log(`Fetching position for address: ${addressToUse}, refresh=${refresh}`);
     
     try {
-      // First try to get position from the fixed position.json file
+      // Path to position cache file
       const dataDir = path.resolve(process.cwd(), 'data');
       const positionFile = path.join(dataDir, 'position.json');
       
-      // Check if position.json exists
-      if (fs.existsSync(positionFile)) {
-        console.log(`Found cached position data at ${positionFile}`);
+      // Only use cache if refresh is not set and cache exists
+      if (!refresh && fs.existsSync(positionFile)) {
+        console.log(`Using cached position data from ${positionFile}`);
         // Read and parse the position data
         const positionData = JSON.parse(fs.readFileSync(positionFile, 'utf8'));
         // Return the cached position data
         return NextResponse.json(positionData);
       }
       
-      // If no cached data, directly call readStakingPosition
+      // Otherwise, get fresh data
+      console.log(`Getting fresh position data for ${addressToUse}`);
       const positionData = await readStakingPosition(addressToUse);
       
       // Make sure data directory exists
@@ -639,9 +641,9 @@ export async function GET(request: Request) {
         fs.mkdirSync(dataDir, { recursive: true });
       }
       
-      // Save the position data to position.json
+      // Save the fresh data to the cache file
       fs.writeFileSync(positionFile, JSON.stringify(positionData, null, 2));
-      console.log(`Position data saved to ${positionFile}`);
+      console.log(`Saved fresh position data to ${positionFile}`);
       
       // Return the position data
       return NextResponse.json(positionData);

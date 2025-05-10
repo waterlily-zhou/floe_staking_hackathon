@@ -22,6 +22,9 @@ interface AutoClaimSettings {
   compoundAware: number;    // Minimum expected compound reward/gas ratio
   timePeriod: number;       // Duration in weeks the settings are active
   setAt: string;            // Timestamp when settings were saved
+  walletAddress?: string;   // Wallet address to check and claim for
+  useDelegation?: boolean;  // Whether to use delegation for claims
+  delegationContractAddress?: string; // Address of the delegation contract
 }
 
 // Default settings
@@ -53,7 +56,10 @@ function loadAutoClaimSettings(): AutoClaimSettings {
         gasAware: settings.gasAware ?? DEFAULT_AUTO_CLAIM_SETTINGS.gasAware,
         compoundAware: settings.compoundAware ?? DEFAULT_AUTO_CLAIM_SETTINGS.compoundAware,
         timePeriod: settings.timePeriod ?? DEFAULT_AUTO_CLAIM_SETTINGS.timePeriod,
-        setAt: settings.setAt ?? DEFAULT_AUTO_CLAIM_SETTINGS.setAt
+        setAt: settings.setAt ?? DEFAULT_AUTO_CLAIM_SETTINGS.setAt,
+        walletAddress: settings.walletAddress,
+        useDelegation: settings.useDelegation,
+        delegationContractAddress: settings.delegationContractAddress
       };
     } else {
       // Create default settings file if it doesn't exist
@@ -237,7 +243,7 @@ function parseArgs(): ThresholdConfig {
   try {
     if (fs.existsSync(AUTO_CLAIM_SETTINGS_FILE)) {
       const data = fs.readFileSync(AUTO_CLAIM_SETTINGS_FILE, 'utf8');
-      const settings = JSON.parse(data) as AutoClaimSettings;
+      const settings = JSON.parse(data) as AutoClaimSettings & { walletAddress?: string, useDelegation?: boolean, delegationContractAddress?: string };
       
       if (settings) {
         if (settings.minRewards !== undefined) {
@@ -251,6 +257,20 @@ function parseArgs(): ThresholdConfig {
         if (settings.compoundAware !== undefined) {
           console.log(`Loading compound aware threshold from auto_claim_settings.json: ${settings.compoundAware}`);
           config.compoundAwareThreshold = settings.compoundAware;
+        }
+        // Read wallet address from settings if not provided in command line
+        if (!config.address && settings.walletAddress) {
+          console.log(`Loading wallet address from auto_claim_settings.json: ${settings.walletAddress}`);
+          config.address = settings.walletAddress;
+        }
+        // Read delegation settings
+        if (settings.useDelegation !== undefined) {
+          console.log(`Loading delegation setting from auto_claim_settings.json: ${settings.useDelegation}`);
+          config.useDelegation = settings.useDelegation;
+        }
+        if (settings.delegationContractAddress) {
+          console.log(`Loading delegation contract from auto_claim_settings.json: ${settings.delegationContractAddress}`);
+          config.delegationContractAddress = settings.delegationContractAddress;
         }
       }
     }

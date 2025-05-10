@@ -1,62 +1,77 @@
 {
   "name": "floe_staking_hackathon",
   "version": "1.0.0",
-  "description": "",
+  "description": "Staking agent for Balancer pools with automated analysis, claiming, and restaking.",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-strategy": "ts-node src/agent/aiAnalysis.ts",
+    "update-strategy": "node update-and-generate.js",
+    "claim-rewards": "ts-node src/agent/claimRewards.ts",
+    "restake-only": "ts-node src/agent/restakeOnly.ts",
+    "scheduler": "node src/scripts/scheduleAgent.js",
+    "scheduler:run-now": "node src/scripts/scheduleAgent.js --run-now",
+    "stake-vebal": "ts-node src/agent/staking.ts",
+    "stake-vebal:dry-run": "ts-node src/agent/staking.ts --dry-run",
+    "stake-vebal:amount": "ts-node src/agent/staking.ts --amount=",
+    "stake-bpt": "ts-node src/agent/stakeLiquidityInGauge.ts",
+    "stake-bpt:dry-run": "ts-node src/agent/stakeLiquidityInGauge.ts --dry-run",
+    "read-position": "ts-node src/agent/readPositions.ts",
+    "read-position:help": "ts-node src/agent/readPositions.ts --help",
+    "read-positions": "ts-node src/agent/readPositions.ts --multiple",
+    "fetch-bribes": "ts-node src/agent/fetch_bribes.ts",
+    "fetch-gauge-data": "ts-node src/agent/fetchGaugeData.ts",
+    "auto-claim-check": "ts-node src/agent/autoClaimChecker.ts",
+    "auto-claim-check:address": "ts-node src/agent/autoClaimChecker.ts --address",
+    "auto-claim-check:min-value": "ts-node src/agent/autoClaimChecker.ts --min-value=",
+    "auto-claim-check-for": "ts-node src/agent/autoClaimChecker.ts --address",
+    "auto-claim-scheduler": "ts-node agent/autoClaimScheduler.ts",
+    "auto-claim-scheduler:run-now": "ts-node agent/autoClaimScheduler.ts --run-now",
+    "auto-claim-scheduler:stop": "ts-node agent/stopScheduler.ts",
+    "wallet-check": "ts-node src/agent/walletChecker.ts",
+    "wallet-check:address": "ts-node src/agent/walletChecker.ts --address=",
+    "deploy:delegator": "npx hardhat run hardhat/deployDelegator.ts",
+    "deploy:delegator:sepolia": "npx hardhat run hardhat/deployDelegator.ts --network sepolia",
+    "deploy:delegator:mainnet": "npx hardhat run hardhat/deployDelegator.ts --network mainnet"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/waterlily-zhou/floe_staking_hackathon.git"
+    "url": "git+https://github.com/waterlily-zhou/auto-compound-ai.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/waterlily-zhou/floe_staking_hackathon/issues"
+    "url": "https://github.com/waterlily-zhou/auto-compound-ai/issues"
   },
-  "homepage": "https://github.com/waterlily-zhou/floe_staking_hackathon#readme",
+  "homepage": "https://github.com/waterlily-zhou/auto-compound-ai#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.3.0",
+    "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/react": "19.1.3",
+    "ethers": "^6.14.0",
+    "hardhat": "^2.23.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.6",
-    "axios": "^1.9.0",
-    "dotenv": "^16.5.0",
-    "ethers": "^6.14.0",
-    "next": "^15.3.2",
-    "node-cron": "^2.0.3",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
-  },
-  "devDependencies": {
-    "@types/dotenv": "^6.1.1",
-    "@types/node": "^22.15.17",
-    "@types/react": "^19.1.3",
-    "@types/react-dom": "^19.1.3",
     "autoprefixer": "^10.4.21",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "next": "^15.3.2",
+    "node-cron": "^3.0.3",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.6",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
-  },
-  "ts-node": {
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  },
-  "paths": {
-    "@/*": [
-      "./src/*"
-    ],
-    "@agent/*": [
-      "./agent/*"
-    ]
-  },
-  "plugins": [
-    {
-      "name": "next"
-    }
-  ]
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.6"
+  }
 }

@@ -69,6 +69,7 @@ interface RewardAction {
 interface StakeAction {
   type: string;
   gaugeAddress: string;
+  gaugeName?: string;
   amount: string;
 }
 
@@ -197,10 +198,10 @@ export default function CompoundTab({ isActive, connectedWallet }: { isActive: b
     setError(null)
     
     try {
-      // If an address is provided, use it for the fetch
+      // Always use refresh=1 to get fresh data
       const url = address 
-        ? `/api/position?address=${address}`
-        : '/api/position';
+        ? `/api/position?address=${address}&refresh=1`
+        : '/api/position?refresh=1';
         
       const response = await fetch(url)
       if (!response.ok) {

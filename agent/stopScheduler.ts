@@ -51,7 +51,7 @@ function updateStatus(): void {
 }
 
 // Stop the scheduler
-function stopScheduler(): void {
+export function stopScheduler(): void {
   console.log('Stopping scheduler...');
   updateStatus();
   console.log('Scheduler stopped. Status updated to not running.');

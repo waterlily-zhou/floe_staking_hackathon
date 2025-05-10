@@ -110,10 +110,43 @@ async function runCommand(command: string, args: string[]): Promise<string> {
 }
 
 // Run the checker directly
-async function runChecker(): Promise<void> {
+async function runChecker(walletAddress?: string): Promise<void> {
   log('Starting auto claim check...');
   
   try {
+    // Set the address in auto claim settings if provided
+    if (walletAddress) {
+      try {
+        // Load existing settings
+        const settingsFile = path.join(process.cwd(), 'data', 'auto_claim_settings.json');
+        let settings = {};
+        
+        if (fs.existsSync(settingsFile)) {
+          const data = fs.readFileSync(settingsFile, 'utf8');
+          settings = JSON.parse(data);
+        }
+        
+        // Update settings with wallet address
+        settings = {
+          ...settings,
+          walletAddress,
+          setAt: new Date().toISOString()
+        };
+        
+        // Ensure directory exists
+        const dir = path.dirname(settingsFile);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        
+        // Save updated settings
+        fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+        log(`Updated auto claim settings with wallet address: ${walletAddress}`);
+      } catch (error: any) {
+        log(`Error updating auto claim settings: ${error.message || String(error)}`);
+      }
+    }
+    
     await checkRewardsThresholds();
     log('Auto claim check completed successfully');
   } catch (error: any) {
@@ -188,13 +221,67 @@ function loadConfig(): SchedulerConfig {
   return config;
 }
 
+// Check if scheduler is running
+export function isSchedulerRunning(): boolean {
+  try {
+    if (fs.existsSync(SCHEDULER_STATUS_FILE)) {
+      const status = JSON.parse(fs.readFileSync(SCHEDULER_STATUS_FILE, 'utf8'));
+      // Only consider it running if updated in the last 15 minutes
+      const fifteenMinutesAgo = new Date();
+      fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+      
+      if (status.isRunning && new Date(status.lastUpdated) > fifteenMinutesAgo) {
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Error checking scheduler status:', error);
+    return false;
+  }
+}
+
 // Main function to start the scheduler
-async function startScheduler(): Promise<void> {
+export async function startScheduler(configOverrides?: Partial<SchedulerConfig>): Promise<void> {
   // Load configuration
-  const config = loadConfig();
+  const defaultConfig = loadConfig();
+  const config = { ...defaultConfig, ...configOverrides };
   
   // Ensure log directory exists
   ensureDirectoryExists(SCHEDULER_LOG_DIR);
+  
+  // If we have a wallet address, update the auto claim settings
+  if (config.walletAddress) {
+    try {
+      // Load existing settings
+      const settingsFile = path.join(process.cwd(), 'data', 'auto_claim_settings.json');
+      let settings = {};
+      
+      if (fs.existsSync(settingsFile)) {
+        const data = fs.readFileSync(settingsFile, 'utf8');
+        settings = JSON.parse(data);
+      }
+      
+      // Update settings with wallet address
+      settings = {
+        ...settings,
+        walletAddress: config.walletAddress,
+        setAt: new Date().toISOString()
+      };
+      
+      // Ensure directory exists
+      const dir = path.dirname(settingsFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
+      // Save updated settings
+      fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+      log(`Updated auto claim settings with wallet address: ${config.walletAddress}`);
+    } catch (error: any) {
+      log(`Error updating auto claim settings: ${error.message || String(error)}`);
+    }
+  }
   
   // Save initial status
   const status: Partial<SchedulerStatus> = {
@@ -227,7 +314,7 @@ async function startScheduler(): Promise<void> {
     if (config.useSubprocess) {
       await runCheckerAsProcess(config.walletAddress);
     } else {
-      await checkRewardsThresholds();
+      await runChecker(config.walletAddress);
     }
     
     // Update status
@@ -242,7 +329,7 @@ async function startScheduler(): Promise<void> {
     if (config.useSubprocess) {
       await runCheckerAsProcess(config.walletAddress);
     } else {
-      await checkRewardsThresholds();
+      await runChecker(config.walletAddress);
     }
     
     // Update status
@@ -298,52 +385,71 @@ function cronToReadable(cronExpression: string): string {
 // Calculate the next run date for a cron expression
 function getNextCronRunDate(cronExpression: string): Date | null {
   try {
-    // Use the cronParser library from node-cron to find next execution date
-    const parser = require('node-cron/src/parser');
-    const schedule = parser.parseExpression(cronExpression);
-    
-    // Get current date
-    const now = new Date();
-    
-    // Find the next schedule after now
-    // This is a simplified implementation to find the next run date
-    let nextDate = new Date(now);
-    
     // Parse cron parts
     const parts = cronExpression.split(' ');
     if (parts.length !== 5) {
       return null; // Invalid cron expression
     }
     
-    // For simple interval patterns
-    if (parts[1].includes('*/')) {
-      // For hourly intervals like */4
-      const hourInterval = parseInt(parts[1].replace('*/', ''));
+    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+    
+    // Get current date
+    const now = new Date();
+    let nextDate = new Date(now);
+    
+    // Handle common patterns
+    // For hourly intervals like */4
+    if (hour.includes('*/')) {
+      const hourInterval = parseInt(hour.replace('*/', ''));
       if (!isNaN(hourInterval) && hourInterval > 0) {
         const currentHour = now.getHours();
         const nextHour = currentHour + (hourInterval - (currentHour % hourInterval));
-        nextDate.setHours(nextHour % 24, 0, 0, 0);
-        if (nextDate <= now) {
-          nextDate.setDate(nextDate.getDate() + 1);
+        
+        // Reset minutes to match cron minutes
+        let cronMinute = 0;
+        if (minute === '*') {
+          cronMinute = 0;
+        } else if (!minute.includes('*')) {
+          cronMinute = parseInt(minute);
         }
+        
+        nextDate.setHours(nextHour % 24, cronMinute, 0, 0);
+        
+        // If the calculated time is in the past, add the interval to get future time
+        if (nextDate <= now) {
+          if (nextHour >= 24) {
+            // Move to next day
+            nextDate.setDate(nextDate.getDate() + 1);
+            nextDate.setHours(nextHour % 24, cronMinute, 0, 0);
+          } else {
+            // Add interval hours
+            nextDate.setHours(nextDate.getHours() + hourInterval, cronMinute, 0, 0);
+          }
+        }
+        
         return nextDate;
       }
     }
     
-    // For simple daily pattern
-    if (parts[1] === '0' && parts[2] === '*') {
-      // Daily at specific hour
-      const hour = parseInt(parts[1]);
-      if (!isNaN(hour)) {
-        nextDate.setHours(hour, 0, 0, 0);
+    // For daily execution
+    if (minute !== '*' && hour !== '*' && dayOfMonth === '*' && month === '*') {
+      const cronHour = parseInt(hour);
+      const cronMinute = parseInt(minute);
+      
+      if (!isNaN(cronHour) && !isNaN(cronMinute)) {
+        nextDate.setHours(cronHour, cronMinute, 0, 0);
+        
         if (nextDate <= now) {
+          // Move to next day
           nextDate.setDate(nextDate.getDate() + 1);
         }
+        
         return nextDate;
       }
     }
     
     // Default fallback: add 24 hours to current time
+    log('Using fallback next run calculation (24 hours from now)');
     nextDate.setTime(now.getTime() + 24 * 60 * 60 * 1000);
     return nextDate;
   } catch (error) {

@@ -22,6 +22,7 @@ const AutoClaimStatus: React.FC = () => {
   const [settings, setSettings] = useState<AutoClaimSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   
   // Function to fetch scheduler status
   const fetchStatus = async () => {
@@ -43,6 +44,66 @@ const AutoClaimStatus: React.FC = () => {
       console.error('Error fetching scheduler status:', err);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Function to start the scheduler
+  const startScheduler = async () => {
+    setActionLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/claim/scheduler', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'start' }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh status after starting
+        fetchStatus();
+      } else {
+        setError(data.error || 'Failed to start scheduler');
+      }
+    } catch (err) {
+      setError('Error connecting to the server');
+      console.error('Error starting scheduler:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  // Function to stop the scheduler
+  const stopScheduler = async () => {
+    setActionLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/claim/scheduler', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'stop' }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh status after stopping
+        fetchStatus();
+      } else {
+        setError(data.error || 'Failed to stop scheduler');
+      }
+    } catch (err) {
+      setError('Error connecting to the server');
+      console.error('Error stopping scheduler:', err);
+    } finally {
+      setActionLoading(false);
     }
   };
   
@@ -144,14 +205,60 @@ const AutoClaimStatus: React.FC = () => {
         <p className="text-sm text-blue-200">No status information available</p>
       )}
       
-      <div className="mt-3">
+      <div className="mt-3 flex space-x-2">
         <button 
           onClick={fetchStatus}
           className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
           disabled={loading}
         >
-          Refresh Status
+          {loading ? (
+            <span className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Refreshing
+            </span>
+          ) : 'Refresh'}
         </button>
+        
+        {status && (
+          <>
+            {status.isRunning ? (
+              <button 
+                onClick={stopScheduler}
+                className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Stopping
+                  </span>
+                ) : 'Stop Scheduler'}
+              </button>
+            ) : (
+              <button 
+                onClick={startScheduler}
+                className="text-xs bg-green-600 hover:bg-green-700 px-2 py-1 rounded"
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Starting
+                  </span>
+                ) : 'Start Scheduler'}
+              </button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
