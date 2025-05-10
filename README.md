@@ -33,22 +33,6 @@ cp .env.local
 # Edit .env.local with your Ethereum RPC and private key
 ```
 
-### Configuration
-
-Create a `data/auto_claim_settings.json` file:
-
-```json
-{
-  "minRewards": 1.0,
-  "gasAware": 1.2,
-  "compoundAware": 1.5,
-  "timePeriod": 4,
-  "setAt": "2023-05-10T12:00:00.000Z",
-  "walletAddress": "YOUR_WALLET_ADDRESS",
-  "useDelegation": false
-}
-```
-
 ### Usage
 
 ```bash
@@ -82,19 +66,10 @@ After deployment:
 2. Update `auto_claim_settings.json` with `"useDelegation": true` and `"delegationContractAddress": "0xYourAddress"`
 3. Call `delegateClaims` function on the contract via Etherscan or web interface
 
-### Docker Deployment
-
-```bash
-# Build the Docker image
-docker build -t floe_staking .
-
-# Run the container
-docker run -e CONNECTION_CONFIGS_CONFIG_PRIVATE_KEY=YOUR_PRIVATE_KEY -e CONNECTION_CONFIGS_CONFIG_ETH_MAINNET_RPC=YOUR_RPC_URL -p 3000:3000 floe_staking
-```
 
 ## License
 
-ISC License
+MIT License
 
 ## Acknowledgments
 
