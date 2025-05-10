@@ -1,7 +1,4 @@
-/* postcss-preset-env stage 0 */
-@tailwind base;
-@tailwind components;
-@tailwind utilities; 
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
