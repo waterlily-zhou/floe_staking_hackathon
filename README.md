@@ -1,7 +1,7 @@
 # Floe Staking
 
 
-Floe is an autonomous agent that analyzes the profitability of Balancer pools and automatically claims and restakes rewards to maximize yield. Built for the Olas SDK Hackathon, Floe is designed to be gas-aware, reward-optimized, and risk-balanced.
+Floe is a staking agent that analyzes the profitability of Balancer pools and automatically claims and restakes rewards to maximize yield. Built for the Olas SDK Hackathon, Floe is designed to be gas-aware, reward-optimized, and risk-balanced.
 
 ## Key Features
 
